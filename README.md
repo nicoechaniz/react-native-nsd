@@ -27,12 +27,27 @@
       compile project(':react-native-nsd')
   	```
 
-
 ## Usage
 ```javascript
-import Nsd from 'react-native-nsd';
+import { NSD } from 'react-native-nsd';
+import { DeviceEventEmitter } from 'react-native';
 
-// TODO: What to do with the module?
-Nsd;
+
+// Listen and react to discovered services
+DeviceEventEmitter.addListener('serviceResolved', function(e){
+  console.log("JS: service resolved");
+  console.log(e.name, e.host, e.port);
+// if you are using react-native-handshake you can try to receive a key from the discovered peer
+// (you should import { Handshake } from react-native-handshake first and then you can do
+  Handshake.receiveKey(e.host, e.port);
+});
+
+// NSD methods (self explanatory)
+NSD.discover();
+NSD.stopDiscovery();
+NSD.register(port_number);
+NSD.unregister();
+
+
 ```
   
