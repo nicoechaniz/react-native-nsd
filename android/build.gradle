@@ -1,0 +1,52 @@
+
+buildscript {
+    ext.kotlin_version = '1.2.71'
+    repositories {
+        jcenter()
+        google()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: "kotlin-android-extensions"
+
+android {
+    compileSdkVersion 23
+//    buildToolsVersion "23.0.1"
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+    }
+    lintOptions {
+        abortOnError false
+    }
+}
+
+repositories {
+    jcenter()
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    implementation "com.android.support:appcompat-v7:23.0.1"
+    implementation 'com.facebook.react:react-native:+'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.30.2"
+
+}
+
+kotlin {
+    experimental {
+        coroutines 'enable'
+    }
+}
