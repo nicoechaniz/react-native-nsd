@@ -1,14 +1,30 @@
+/*
+Copyright 2018 Nicolás Echániz <nicoechaniz@altermundi.net>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+
 package net.altermundi.rn_nsd;
 
 import android.util.Log
 import com.facebook.react.bridge.*
 
 class NsdModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
-    internal val mNsdHelper = NsdHelper(reactContext);
+    internal val mNsdHelper = NsdHelper(reactContext)
     val reactContext: ReactApplicationContext = reactContext
 
     init{
-        mNsdHelper.initializeNsd()
         /* forward resume, pause, destroy to controller */
         reactContext.addLifecycleEventListener(object : LifecycleEventListener {
             override fun onHostResume() {
@@ -37,7 +53,6 @@ class NsdModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
 
     @ReactMethod
     fun unregister() {
-        //TODO: close the server socket when service is unregistered
         mNsdHelper.tearDown()
     }
 

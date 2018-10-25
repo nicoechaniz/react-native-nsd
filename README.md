@@ -1,6 +1,8 @@
 
 # react-native-nsd
 
+This module is a wrapper to use Android's Network Service Discovery from a react-native App.
+
 ## Getting started
 
 `$ npm install react-native-nsd --save`
@@ -28,18 +30,35 @@
   	```
 
 ## Usage
+
+You will need to set your service details in the Android Manifest for your App.
+
+Something like:
+
+```xml
+<application>
+   ...
+   <meta-data android:name="nsdServiceType" android:value="_myservice._tcp."></meta-data>
+   <meta-data android:name="nsdServiceName" android:value="My Service"></meta-data>
+</application>
+```
+
+To use the module in your App.
+
+
 ```javascript
 import { NSD } from 'react-native-nsd';
 import { DeviceEventEmitter } from 'react-native';
 
 
-// Listen and react to discovered services
+// Listen and react to discovered/resolved services
 DeviceEventEmitter.addListener('serviceResolved', function(e){
   console.log("JS: service resolved");
   console.log(e.name, e.host, e.port);
-// if you are using react-native-handshake you can try to receive a key from the discovered peer
-// (you should import { Handshake } from react-native-handshake first and then you can do
+// if you are using react-native-handshake you can receive handshake message from the discovered peer
+// You would import { Handshake } from react-native-handshake first and then you can do
   Handshake.receiveKey(e.host, e.port);
+// read react-native-handshake documentation for info on how to use it
 });
 
 // NSD methods (self explanatory)
@@ -47,7 +66,6 @@ NSD.discover();
 NSD.stopDiscovery();
 NSD.register(port_number);
 NSD.unregister();
-
 
 ```
   
