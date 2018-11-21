@@ -53,7 +53,6 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
         mServiceType = readMetadata("nsdServiceType") ?: "_undefined._tcp."
         mServiceName = "$mBaseServiceName at $mANDROID_ID"
         mNsdManager = mContext.getSystemService(Context.NSD_SERVICE) as NsdManager
-        initializeResolveListener()
     }
 
     private fun readMetadata(key: String): String? {
