@@ -37,7 +37,6 @@ import android.content.pm.PackageManager
 class NsdHelper(internal val reactContext: ReactApplicationContext) {
     internal var mContext: Context = reactContext.baseContext
     internal var mNsdManager: NsdManager
-    internal var mResolveListener: NsdManager.ResolveListener? = null
     internal var mDiscoveryListener: NsdManager.DiscoveryListener? = null
     internal var mRegistrationListener: NsdManager.RegistrationListener? = null
     var chosenServiceInfo: NsdServiceInfo? = null
@@ -84,7 +83,8 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
                 } else if (service.serviceName == mServiceName) {
                     Log.d(TAG, "Same machine: $mServiceName")
                 } else if (service.serviceName.contains(mBaseServiceName)) {
-                    mNsdManager.resolveService(service, mResolveListener)
+                    var resolveListener = initializeResolveListener()
+                    mNsdManager.resolveService(service, resolveListener)
                 }
             }
 
@@ -109,8 +109,8 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
         }
     }
 
-    private fun initializeResolveListener() {
-        mResolveListener = object : NsdManager.ResolveListener {
+    private fun initializeResolveListener(): NsdManager.ResolveListener {
+        val newResolveListener = object : NsdManager.ResolveListener {
             override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
                 Log.e(TAG, "Resolve failed$errorCode")
             }
@@ -133,6 +133,7 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
                 sendEvent(reactContext, "serviceResolved", params)
             }
         }
+        return (newResolveListener)
     }
 
     private fun initializeRegistrationListener() {
