@@ -36,8 +36,13 @@ class NsdModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
             }
 
             override fun onHostDestroy() {
-                mNsdHelper.tearDown()
                 Log.d(TAG, "host destroyed")
+                mNsdHelper.tearDown()
+                try {
+                    mNsdHelper.mNsdManager.stopServiceDiscovery(mNsdHelper.mDiscoveryListener)
+                } catch (e: RuntimeException) {
+                    Log.e(TAG, e.message)
+                }
             }
         })
     }

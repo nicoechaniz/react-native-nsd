@@ -32,7 +32,9 @@ import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import android.content.pm.PackageManager
-
+import java.lang.Exception
+import java.lang.Thread.sleep
+import java.util.*
 
 class NsdHelper(internal val reactContext: ReactApplicationContext) {
     internal var mContext: Context = reactContext.baseContext
@@ -46,6 +48,7 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
     internal var mServiceType: String
     internal var mBaseServiceName: String
     internal var mServiceName: String
+    internal var mResolutionQueue = ResolutionQueue()
 
     init {
         // Try to read the service name and type from the App's manifest
@@ -69,6 +72,62 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
         return(value)
     }
 
+    inner class ResolutionQueue {
+        // NsdManager.resolveService fails when resolutions are processed concurrently.
+        // this queue, while not pretty, gets the job done to process resolutions sequentially
+        var queue = ArrayDeque<NsdServiceInfo>()
+        var resolutionInProgress: Boolean = false
+
+        fun add (serviceInfo: NsdServiceInfo){
+            queue.addLast(serviceInfo)
+            Log.e(TAG, "Current Queue: $queue")
+        }
+
+        fun resolveNext(){
+            while (resolutionInProgress == true){
+                sleep(1000)
+                Log.d(TAG, "resolution still in progress...")
+            }
+            val service = queue.pollFirst()
+            if (service != null) {
+                Log.d(TAG, "Resolving service: $service ")
+                val resolveListener = NsdResolveListener()
+                resolutionInProgress = true
+                mNsdManager.resolveService(service, resolveListener)
+            }
+        }
+    }
+
+    inner class NsdResolveListener: NsdManager.ResolveListener {
+
+        override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+            Log.e(TAG, "Resolve failed with error code: $errorCode for $serviceInfo")
+            mResolutionQueue.resolutionInProgress = false
+            mResolutionQueue.resolveNext()
+        }
+
+        override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
+            Log.e(TAG, "Resolve Succeeded. $serviceInfo")
+            if (serviceInfo.serviceName == mServiceName) {
+                Log.d(TAG, "Same IP.")
+            } else {
+                chosenServiceInfo = serviceInfo
+                val port: Int = serviceInfo.port
+                val host: String = serviceInfo.host.toString().replace("/", "")
+                val name: String = serviceInfo.serviceName
+
+                var params: WritableMap = Arguments.createMap()
+                params.putInt("port", port)
+                params.putString("host", host)
+                params.putString("name", name)
+                sendEvent(reactContext, "serviceResolved", params)
+            }
+            mResolutionQueue.resolutionInProgress = false
+            // each resolution calls for the resolution of the next service in the queue
+            mResolutionQueue.resolveNext()
+        }
+    }
+
     private fun initializeDiscoveryListener() {
         mDiscoveryListener = object : NsdManager.DiscoveryListener {
             override fun onDiscoveryStarted(regType: String) {
@@ -82,8 +141,11 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
                 } else if (service.serviceName == mServiceName) {
                     Log.d(TAG, "Same machine: $mServiceName")
                 } else if (service.serviceName.contains(mBaseServiceName)) {
-                    var resolveListener = initializeResolveListener()
-                    mNsdManager.resolveService(service, resolveListener)
+                    // add service to the resolution queue and start resolution if not in progress
+                    mResolutionQueue.add(service)
+                    if (mResolutionQueue.resolutionInProgress == false) {
+                        mResolutionQueue.resolveNext()
+                    }
                 }
             }
 
@@ -106,33 +168,6 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
                 Log.e(TAG, "Discovery failed: Error code:$errorCode")
             }
         }
-    }
-
-    private fun initializeResolveListener(): NsdManager.ResolveListener {
-        val newResolveListener = object : NsdManager.ResolveListener {
-            override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
-                Log.e(TAG, "Resolve failed$errorCode")
-            }
-
-            override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
-                Log.e(TAG, "Resolve Succeeded. $serviceInfo")
-                if (serviceInfo.serviceName == mServiceName) {
-                    Log.d(TAG, "Same IP.")
-                    return
-                }
-                chosenServiceInfo = serviceInfo
-                val port: Int = serviceInfo.port
-                val host: String = serviceInfo.host.toString().replace("/", "")
-                val name: String = serviceInfo.serviceName
-
-                var params: WritableMap = Arguments.createMap()
-                params.putInt("port", port)
-                params.putString("host", host)
-                params.putString("name", name)
-                sendEvent(reactContext, "serviceResolved", params)
-            }
-        }
-        return (newResolveListener)
     }
 
     private fun initializeRegistrationListener() {
@@ -188,7 +223,8 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
         if (mRegistrationListener != null) {
             try {
                 mNsdManager.unregisterService(mRegistrationListener)
-            } finally {
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to unregister service.")
             }
             mRegistrationListener = null
         }
