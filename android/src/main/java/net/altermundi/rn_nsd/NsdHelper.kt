@@ -51,25 +51,10 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
     internal var mResolutionQueue = ResolutionQueue()
 
     init {
-        // Try to read the service name and type from the App's manifest
-        mBaseServiceName = readMetadata("nsdServiceName") ?: "Undefined Service"
-        mServiceType = readMetadata("nsdServiceType") ?: "_undefined._tcp."
+        mBaseServiceName = "rnnsd"
+        mServiceType = "_rnnsd._tcp."
         mServiceName = "$mBaseServiceName at $mANDROID_ID"
         mNsdManager = mContext.getSystemService(Context.NSD_SERVICE) as NsdManager
-    }
-
-    private fun readMetadata(key: String): String? {
-        Log.d(TAG, "Reading metadata for $key")
-        var value: String? = null
-        val ai = reactContext.applicationInfo
-        try {
-            value = ai.metaData.getString(key)
-        } catch (e: PackageManager.NameNotFoundException) {
-            Log.e(TAG, "Failed to load meta-data, NameNotFound: " + e.message)
-        } catch (e: NullPointerException) {
-            Log.e(TAG, "Failed to load meta-data, NullPointer: " + e.message)
-        }
-        return(value)
     }
 
     inner class ResolutionQueue {
@@ -189,6 +174,13 @@ class NsdHelper(internal val reactContext: ReactApplicationContext) {
                 Log.d(TAG, "Service unregistration failed: $errorCode")
             }
         }
+    }
+
+    fun setServiceName(name: String) {
+        mBaseServiceName = name
+        mServiceType = "_"+name.toLowerCase().replace("\\s+","")+"._tcp."
+        mServiceName = "$mBaseServiceName at $mANDROID_ID"
+        Log.d(TAG, "Service name changed: $mBaseServiceName $mServiceType mServiceName")
     }
 
     fun registerService(port: Int) {
