@@ -52,6 +52,11 @@ class NsdModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
     }
 
     @ReactMethod
+    fun setServiceName(name: String) {
+        mNsdHelper.setServiceName(name)
+    }
+
+    @ReactMethod
     fun register(port: Int) {
         mNsdHelper.registerService(port)
     }

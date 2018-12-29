@@ -1,7 +1,6 @@
-
 {
   "name": "react-native-nsd",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "React Native module that provides access to Android's Network Service Discovery.",
   "main": "index.js",
   "scripts": {
@@ -9,12 +8,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nicoechaniz/react-native-nsd.git"
+    "url": "https://github.com/AlterMundi/react-native-nsd.git"
   },
   "keywords": [
-    "react-native", "nsd", "network service discovery"
+    "react-native",
+    "nsd",
+    "network service discovery"
   ],
-
   "author": "Nicolás Echániz",
   "license": "Apache-2.0",
   "peerDependencies": {
