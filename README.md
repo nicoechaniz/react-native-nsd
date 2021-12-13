@@ -22,7 +22,7 @@ This module is a wrapper to use Android's Network Service Discovery from a react
 2. Append the following lines to `android/settings.gradle`:
   	```
   	include ':react-native-nsd'
-  	project(':react-native-nsd').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-sd/android')
+  	project(':react-native-nsd').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-nsd/android')
   	```
 3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
   	```
